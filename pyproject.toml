@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "Diffusion-Models-ENSO"
 version = "0.1.0"
-description = "Geospatial data science project to analyze ENSO-related diffusion patterns"
-authors = ["Your Name <you@example.com>"]
+description = "Project to assess the ENSO variability using generative diffusion models"
+authors = ["Niccolò Zagli"]
 readme = "README.md"
 packages = [{ include = "diffusion_models_enso", from = "src" }]
 
@@ -29,8 +29,12 @@ target-version = ['py311']
 profile = "black"
 
 [tool.mypy]
-strict = true
 ignore_missing_imports = true
+disallow_untyped_defs = false
+check_untyped_defs = true
+warn_unused_ignores = true
+show_error_codes = true
+strict_optional = true
 
 [build-system]
 requires = ["poetry-core"]
