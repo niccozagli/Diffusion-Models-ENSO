@@ -14,8 +14,3 @@ repos:
     hooks:
       - id: mypy
         args: ["--config-file=pyproject.toml"]
-
-  - repo: https://github.com/pytest-dev/pytest
-    rev: v7.4.3
-    hooks:
-      - id: pytest
