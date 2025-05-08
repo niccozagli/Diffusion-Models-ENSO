@@ -1,0 +1,13 @@
+name: Diffusion-Models-ENSO
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - xarray
+  - scikit-learn
+  - numpy
+  - pandas
+  - matplotlib
+  - pip:
+      - poetry

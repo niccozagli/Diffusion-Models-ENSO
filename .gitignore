@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+poetry.lock
+.env
+.venv
+notebooks/.ipynb_checkpoints/
