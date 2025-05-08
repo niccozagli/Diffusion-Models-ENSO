@@ -55,10 +55,7 @@ To contribute:
    git add <modified-files>
    ```
 
-5. Commit your changes:
-   ```bash
-   git commit --amend --no-edit
-   ```
+5. Commit your changes.
 
 6. You can now push changes to your branch:
    ```bash
