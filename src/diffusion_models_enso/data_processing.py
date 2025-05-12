@@ -1,7 +1,11 @@
+from typing import Dict, List, Tuple
+
 import numpy as np
 
 
-def get_statistics(paths):
+def get_statistics(
+    paths: List[str],
+) -> Tuple[List[np.ndarray], List[np.ndarray], List[Dict[int, np.ndarray]]]:
     X_means = []
     X_all = []
     X_var = []
@@ -28,7 +32,11 @@ def get_statistics(paths):
     return X_means, X_var, X_all
 
 
-def evaluate_anomalies(months, Dataset_Nino, Dataset_Global):
+def evaluate_anomalies(
+    months: List[int],
+    Dataset_Nino: List[Dict[int, np.ndarray]],
+    Dataset_Global: List[Dict[int, np.ndarray]],
+):
     ANOMALIES = []
     before_removing_ensemble_mean = []
     for ii, month in enumerate(months):
