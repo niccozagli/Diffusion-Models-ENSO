@@ -1,7 +1,6 @@
 import glob
 import logging
-from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, TypedDict, Union
 
 import numpy as np
 import xarray as xr
@@ -14,18 +13,24 @@ from diffusion_models_enso.utils.load_config import get_data_retrieving_settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Load default settings
 base_settings = get_data_retrieving_settings()
 
 
-@dataclass
-class ClimateDataResult:
-    ensemble_means: Dict[int, np.ndarray]
-    ensemble_stds: Dict[int, np.ndarray]
-    lens_means: Dict[int, np.ndarray]
-    lens_stds: Dict[int, np.ndarray]
-    ensemble_file_paths: Dict[int, str]
-    lens_file_paths: Dict[int, List[str]]
-    lens_closest_indexes: Dict[int, List[int]]
+class DiffusionEntry(TypedDict):
+    mean: np.ndarray
+    std: np.ndarray
+    file_path: str
+
+
+class LensEntry(TypedDict):
+    mean: np.ndarray
+    std: np.ndarray
+    file_paths: List[str]
+    closest_indexes: List[int]
+
+
+ResultDict = Dict[str, Dict[int, Union[DiffusionEntry, LensEntry]]]
 
 
 def compute_weighted_mean_std(
@@ -73,7 +78,7 @@ def closest_co2vmr_year(co2vmr: float, file_paths: List[str]) -> Tuple[int, int,
 
 
 def extract_closest_co2vmr_data(
-    co2vmr: float, target_month: int, variable: str, file_paths: List[str]
+    co2vmr: float, target_month: int, var: str, file_paths: List[str]
 ) -> Tuple[xr.Dataset, List[int]]:
     dats_list = []
     closest_indexes = []
@@ -87,7 +92,7 @@ def extract_closest_co2vmr_data(
         min_index = np.argmin(abs_diff)
 
         closest_indexes.append(min_index)
-        selected_data = ds_month.isel(time=min_index)[variable].values
+        selected_data = ds_month.isel(time=min_index)[var].values
         dats_list.append(selected_data)
 
     dats_stack = np.stack(dats_list, axis=0)
@@ -101,15 +106,12 @@ def extract_closest_co2vmr_data(
         coords={"time": times, "lat": lat, "lon": lon},
     )
 
-    logger.info(f"Extracted data shape: {dats_stack.shape} for variable: {variable}")
-    return dats_da.to_dataset(name=variable), closest_indexes
+    logger.info(f"Extracted data shape: {dats_stack.shape} for variable: {var}")
+    return dats_da.to_dataset(name=var), closest_indexes
 
 
 def get_matching_lens_data(
-    co2vmr: float,
-    target_month: int,
-    variable: str,
-    settings: DataRetrievinSettings = base_settings,
+    co2vmr: float, target_month: int, var: str, settings: DataRetrievinSettings
 ) -> Tuple[xr.Dataset, List[int]]:
     lens_files = sorted(glob.glob(f"{settings.lens_data_path}/*1001.001*.nc"))
     yt, mt, fout = closest_co2vmr_year(co2vmr, lens_files)
@@ -119,31 +121,25 @@ def get_matching_lens_data(
 
     year = int(fout.split(".")[-2][:4])
     year_files = sorted(glob.glob(f"{settings.lens_data_path}/*.{year}*.nc"))
-    return extract_closest_co2vmr_data(co2vmr, mt, variable, year_files)
+    return extract_closest_co2vmr_data(co2vmr, mt, var, year_files)
 
 
 def get_data(
-    momo: int, flag: bool = False, settings: DataRetrievinSettings = base_settings
-) -> ClimateDataResult:
-
-    pattern = f"{settings.diffusion_data_path}{momo:02}*.nc"
+    month: int,
+    Enso_region: bool = False,
+    settings: DataRetrievinSettings = base_settings,
+) -> ResultDict:
+    pattern = f"{settings.diffusion_data_path}{month:02}*.nc"
     ensemble_files = sorted(glob.glob(pattern))
 
-    result = ClimateDataResult(
-        ensemble_means={},
-        ensemble_stds={},
-        lens_means={},
-        lens_stds={},
-        ensemble_file_paths={},
-        lens_file_paths={},
-        lens_closest_indexes={},
-    )
+    result: ResultDict = {"diffusion": {}, "lens": {}}
 
     for ee, fn in enumerate(ensemble_files):
-        logger.info(f"Processing ensemble {ee + 2015}: {fn}")
+        year = ee + 2015
+        logger.info(f"Processing diffusion {year}: {fn}")
         ds = xr.open_dataset(fn)
 
-        if flag:
+        if Enso_region:
             ds = ds.sel(
                 lat=slice(settings.ENSO_lat_min, settings.ENSO_lat_max),
                 lon=slice(settings.ENSO_long_min, settings.ENSO_long_max),
@@ -151,21 +147,20 @@ def get_data(
 
         lat = ds["lat"]
         weights = np.cos(np.deg2rad(lat))
-        mean, std = compute_weighted_mean_std(ds["TREFHT"], weights, "samples", 50)
 
-        result.ensemble_means[ee] = mean
-        result.ensemble_stds[ee] = std
-        result.ensemble_file_paths[ee] = fn
+        mean, std = compute_weighted_mean_std(ds["TREFHT"], weights, "samples", 50)
+        result["diffusion"][year] = {
+            "mean": mean,
+            "std": std,
+            "file_path": fn,
+        }
 
         co2vmr = extract_co2vmr_from_filename(fn)
         lens_ds, closest_indexes = get_matching_lens_data(
-            co2vmr, momo, "TREFHT", settings
+            co2vmr, month, "TREFHT", settings
         )
 
-        result.lens_file_paths[ee] = lens_ds.attrs.get("source_files", [])
-        result.lens_closest_indexes[ee] = closest_indexes
-
-        if flag:
+        if Enso_region:
             lens_ds = lens_ds.sel(
                 lat=slice(settings.ENSO_lat_min, settings.ENSO_lat_max),
                 lon=slice(settings.ENSO_long_min, settings.ENSO_long_max),
@@ -174,8 +169,12 @@ def get_data(
         mean_lens, std_lens = compute_weighted_mean_std(
             lens_ds["TREFHT"], weights, "time", 50
         )
-        result.lens_means[ee] = mean_lens
-        result.lens_stds[ee] = std_lens
+        result["lens"][year] = {
+            "mean": mean_lens,
+            "std": std_lens,
+            "file_paths": lens_ds.attrs.get("source_files", []),
+            "closest_indexes": closest_indexes,
+        }
 
     logger.info("Data extraction and processing completed.")
     return result
