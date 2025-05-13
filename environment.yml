@@ -9,5 +9,8 @@ dependencies:
   - numpy
   - pandas
   - matplotlib
+  - cartopy
+  - libnetcdf
+  - gdal
   - pip:
       - poetry

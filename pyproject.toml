@@ -13,6 +13,8 @@ scikit-learn = "*"
 numpy = "*"
 pandas = "*"
 matplotlib = "*"
+pydantic-settings = "^2.9.1"
+xskillscore = "^0.0.26"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
