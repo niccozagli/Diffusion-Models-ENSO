@@ -1,16 +1,17 @@
 #!/bin/bash
 
-ENV_NAME="Diffusion-Models-ENSO"
+set -euo pipefail
 
-echo "🔧 Creating conda environment: $ENV_NAME"
-conda env create -f environment.yml || conda env update -f environment.yml
+if ! command -v pixi >/dev/null 2>&1; then
+  echo "pixi is not installed. Install it first from https://pixi.sh/"
+  exit 1
+fi
 
-echo "✅ Activating environment and installing Poetry dependencies..."
-eval "$(conda shell.bash hook)"
-conda activate $ENV_NAME
+echo "Installing project environment with pixi..."
+pixi install
 
-echo "📦 Installing Poetry dependencies..."
-poetry install
-
-echo "🎉 Setup complete. To activate the environment, run:"
-echo "   conda activate $ENV_NAME"
+echo "Setup complete. Useful commands:"
+echo "  pixi run test"
+echo "  pixi run format"
+echo "  pixi run typecheck"
+echo "  pixi run notebook"

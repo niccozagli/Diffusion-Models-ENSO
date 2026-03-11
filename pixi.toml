@@ -1,0 +1,38 @@
+[workspace]
+name = "diffusion-models-enso"
+version = "0.1.0"
+description = "Project to assess the ENSO variability using generative diffusion models"
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "osx-64", "linux-64", "win-64"]
+
+[activation.env]
+PYTHONPATH = "src"
+
+[dependencies]
+python = "3.11.*"
+numpy = "*"
+pandas = "*"
+xarray = "*"
+scikit-learn = "*"
+matplotlib = "*"
+cartopy = "*"
+libnetcdf = "*"
+gdal = "*"
+pydantic-settings = "*"
+xskillscore = "*"
+notebook = "*"
+ipykernel = "*"
+scipy = "*"
+pillow = "*"
+tqdm = "*"
+eofs = "*"
+pytest = "*"
+black = "*"
+isort = "*"
+mypy = "*"
+
+[tasks]
+test = "pytest"
+format = "black src tests && isort src tests"
+typecheck = "mypy src"
+notebook = "jupyter notebook"

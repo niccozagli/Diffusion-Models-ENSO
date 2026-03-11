@@ -9,25 +9,27 @@ Where's ENZO!!!
 
 This project uses:
 
-- ✅ **Conda** for environment and system-level package management
-- ✅ **Poetry** for Python dependencies and packaging
+- ✅ **Pixi** for environment and dependency management
 
 ---
 
 ## 🔧 Setup
 
-Clone the repo and run the setup script:
+Clone the repo and install dependencies with Pixi:
 
 ```bash
 git clone git@github.com:your-username/Diffusion-Models-ENSO.git
 cd Diffusion-Models-ENSO
-./setup.sh
+pixi install
 ```
 
-This will:
+This works on macOS, Linux, and Windows.
 
-- Create a Conda environment
-- Install Python dependencies via Poetry
+Optional (macOS/Linux only):
+
+```bash
+./setup.sh
+```
 
 ---
 
@@ -44,10 +46,9 @@ To contribute:
 
 3. Run code checks manually:
    ```bash
-   poetry run black src tests
-   poetry run isort src tests
-   poetry run mypy src
-   poetry run pytest
+   pixi run format
+   pixi run typecheck
+   pixi run test
    ```
 
 4. If any files were modified (e.g., by `black`), **re-add them**:
@@ -71,7 +72,7 @@ To contribute:
 Run tests locally with:
 
 ```bash
-poetry run pytest
+pixi run test
 ```
 
 Add tests under the `tests/` folder using descriptive names.
@@ -83,13 +84,9 @@ Add tests under the `tests/` folder using descriptive names.
 After activating the environment:
 
 ```bash
-conda activate Diffusion-Models-ENSO
-
-# Run tests
-poetry run pytest
-
-# Format and lint
-poetry run black src tests
-poetry run isort src tests
-poetry run mypy src
+pixi install
+pixi run test
+pixi run format
+pixi run typecheck
+pixi run notebook
 ```
