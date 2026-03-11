@@ -11,9 +11,6 @@ This project uses:
 
 - ✅ **Conda** for environment and system-level package management
 - ✅ **Poetry** for Python dependencies and packaging
-- ✅ **pre-commit** for formatting, linting, and static analysis
-- ✅ **GitHub Actions** for CI (code quality checks)
-- ✅ **Branch-based development** for safe collaboration
 
 ---
 
@@ -47,7 +44,10 @@ To contribute:
 
 3. Run code checks manually:
    ```bash
-   poetry run pre-commit run
+   poetry run black src tests
+   poetry run isort src tests
+   poetry run mypy src
+   poetry run pytest
    ```
 
 4. If any files were modified (e.g., by `black`), **re-add them**:
@@ -62,7 +62,7 @@ To contribute:
    git push origin feature/my-new-analysis
    ```
 
-7. When ready, create a pull  request. All changes will go through pull request review and CI checks before merging.
+7. When ready, create a pull request.
 
 ---
 

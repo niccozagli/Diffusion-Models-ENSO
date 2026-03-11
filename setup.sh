@@ -14,6 +14,3 @@ poetry install
 
 echo "🎉 Setup complete. To activate the environment, run:"
 echo "   conda activate $ENV_NAME"
-echo ""
-echo "📌 IMPORTANT: Run the following before pushing your changes:"
-echo "   poetry run pre-commit run --all-files"
