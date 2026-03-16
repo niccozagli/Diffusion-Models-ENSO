@@ -33,6 +33,35 @@ Optional (macOS/Linux only):
 ./setup.sh
 ```
 
+## VS Code
+
+Pixi creates the project environment under `.pixi/envs/default`, so VS Code may not
+auto-detect it as a Jupyter kernel the way it would with a local `.venv`.
+
+To use the project environment in VS Code:
+
+1. Select the interpreter at `.pixi/envs/default/bin/python`.
+2. Install the project in editable mode so imports from `src/` work in the kernel:
+
+```bash
+pixi run python -m pip install -e .
+```
+
+3. If no Jupyter kernel appears, register one explicitly:
+
+```bash
+pixi run python -m ipykernel install --user \
+  --name diffusion-models-enso \
+  --display-name "Python (Diffusion-Models-ENSO)"
+```
+
+For marimo-based analysis apps under `analysis/`, you can launch them directly:
+
+```bash
+pixi run marimo edit analysis/data_analysis.py
+```
+or open them in VSCode (after registering the kernel in the previous step).
+
 ## Data Preparation
 
 The first reproducible data-preparation entry point is
