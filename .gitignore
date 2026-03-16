@@ -1,0 +1,11 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.env
+.venv
+.pixi/
+.pytest_cache/
+notebooks/.ipynb_checkpoints/
+data/diffusion.nc
