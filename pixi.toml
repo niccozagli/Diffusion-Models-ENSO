@@ -42,5 +42,3 @@ format = "black src scripts tests && isort src scripts tests"
 typecheck = "mypy src scripts"
 notebook = "jupyter notebook"
 
-[environments]
-enso = []
