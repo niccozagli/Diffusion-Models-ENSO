@@ -9,4 +9,4 @@ __pycache__/
 .pytest_cache/
 __marimo__/
 notebooks/.ipynb_checkpoints/
-data/diffusion.nc
+data/*.nc

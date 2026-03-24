@@ -7,14 +7,17 @@ import numpy as np
 import pytest
 import xarray as xr
 
+from diffusion_models_enso.analysis import build_month_arrays
 from diffusion_models_enso.utils import find_repo_root
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_PATH = REPO_ROOT / "scripts" / "build_diffusion_month.py"
+SCRIPT_PATH = REPO_ROOT / "scripts" / "build_monthly_diagnostics.py"
 
 
 def load_build_script():
-    spec = importlib.util.spec_from_file_location("build_diffusion_month", SCRIPT_PATH)
+    spec = importlib.util.spec_from_file_location(
+        "build_monthly_diagnostics", SCRIPT_PATH
+    )
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Could not load module from {SCRIPT_PATH}")
 
@@ -44,13 +47,12 @@ def test_find_repo_root_from_nested_path() -> None:
 
 
 def test_build_month_arrays_returns_expected_values(tmp_path: Path) -> None:
-    module = load_build_script()
     file_one = tmp_path / "samples_governance_indexes_3944_month12_a.nc"
     file_two = tmp_path / "samples_governance_indexes_3944_month12_b.nc"
     write_month_file(file_one, [1.0, 2.0, 3.0])
     write_month_file(file_two, [4.0, 5.0, 6.0])
 
-    global_temp, nino34, file_names, n_years, n_samples = module.build_month_arrays(
+    global_temp, nino34, file_names, n_years, n_samples = build_month_arrays(
         [file_one, file_two],
         month=12,
         n_samples=None,
@@ -65,11 +67,39 @@ def test_build_month_arrays_returns_expected_values(tmp_path: Path) -> None:
 
 
 def test_build_month_arrays_rejects_inconsistent_sample_count(tmp_path: Path) -> None:
-    module = load_build_script()
     file_one = tmp_path / "samples_governance_indexes_3944_month01_a.nc"
     file_two = tmp_path / "samples_governance_indexes_3944_month01_b.nc"
     write_month_file(file_one, [1.0, 2.0, 3.0])
     write_month_file(file_two, [4.0, 5.0])
 
     with pytest.raises(ValueError, match="expected 3"):
-        module.build_month_arrays([file_one, file_two], month=1, n_samples=None)
+        build_month_arrays([file_one, file_two], month=1, n_samples=None)
+
+
+def test_main_writes_monthly_diagnostics_dataset(tmp_path: Path) -> None:
+    module = load_build_script()
+    output_path = tmp_path / "monthly_diagnostics.nc"
+    write_month_file(
+        tmp_path / "samples_governance_indexes_3944_month12_a.nc", [1.0, 2.0, 3.0]
+    )
+    write_month_file(
+        tmp_path / "samples_governance_indexes_3944_month12_b.nc", [4.0, 5.0, 6.0]
+    )
+
+    module.main(
+        input_dir=tmp_path,
+        months=[12],
+        start_year=2030,
+        output=output_path,
+        overwrite=True,
+    )
+
+    diagnostics = xr.open_dataset(output_path)
+    try:
+        assert diagnostics["month"].values.tolist() == ["December"]
+        assert diagnostics["month_number"].values.tolist() == [12]
+        assert "global_trefht" in diagnostics.data_vars
+        assert "nino34_trefht" in diagnostics.data_vars
+        assert "nino34_index" in diagnostics.data_vars
+    finally:
+        diagnostics.close()
